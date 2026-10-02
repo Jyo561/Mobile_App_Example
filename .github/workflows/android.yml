@@ -1,0 +1,97 @@
+name: Build Android APK
+on:
+push:
+branches:
+- main
+workflow_dispatch:
+jobs:
+build-android:
+runs-on: ubuntu-latest
+steps:
+# ------------------------------------------
+# Checkout source code
+# ------------------------------------------
+- name: Checkout repository
+  uses: actions/checkout@v4
+# ------------------------------------------
+# Install Rust
+# ------------------------------------------
+- name: Install Rust
+  uses: dtolnay/rust-toolchain@stable
+  with:
+  targets: wasm32-unknown-unknown
+# ------------------------------------------
+# Install Trunk
+# ------------------------------------------
+- name: Install Trunk
+  run: cargo install trunk
+# ------------------------------------------
+# Build Yew application
+# ------------------------------------------
+- name: Build Yew application
+  run: trunk build --release
+# ------------------------------------------
+# Install Node.js
+# ------------------------------------------
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+  node-version: 22
+# ------------------------------------------
+# Initialize npm
+# ------------------------------------------
+- name: Initialize npm project
+  run: npm init -y
+# ------------------------------------------
+# Install Capacitor
+# ------------------------------------------
+- name: Install Capacitor
+  run: |
+  npm install @capacitor/core
+  npm install @capacitor/cli
+  npm install @capacitor/android
+# ------------------------------------------
+# Initialize Capacitor
+# ------------------------------------------
+- name: Initialize Capacitor
+  run: |
+  npx cap init Pomodoro com.example.pomodoro \
+  --web-dir dist
+# ------------------------------------------
+# Generate Android project
+# ------------------------------------------
+- name: Add Android platform
+  run: npx cap add android
+# ------------------------------------------
+# Synchronize web application
+# ------------------------------------------
+- name: Sync Capacitor
+  run: npx cap sync android
+
+  # ------------------------------------------
+# Setup Java
+# ------------------------------------------
+- name: Setup Java
+  uses: actions/setup-java@v4
+  with:
+  distribution: temurin
+  java-version: 17
+# ------------------------------------------
+# Setup Android SDK
+# ------------------------------------------
+- name: Setup Android SDK
+uses: android-actions/setup-android@v3
+# ------------------------------------------
+# Build APK
+# ------------------------------------------
+- name: Build debug APK
+working-directory: android
+run: ./gradlew assembleDebug
+# ------------------------------------------
+# Upload APK
+# ------------------------------------------
+- name: Upload APK
+uses: actions/upload-artifact@v4
+with:
+name: pomodoro-debug-apk
+path: android/app/build/outputs/apk/debug/app-debug.apk

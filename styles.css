@@ -1,0 +1,152 @@
+:root {
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+
+    color: #3f4652;
+    background: #e0e5ec;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #e0e5ec;
+}
+
+/* Main Card */
+
+main {
+    width: min(90vw, 420px);
+    padding: 3rem 2.5rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    background: #e0e5ec;
+    border-radius: 30px;
+
+    box-shadow:
+        12px 12px 24px #bec3c9,
+        -12px -12px 24px #ffffff;
+}
+
+/* Title */
+
+h1 {
+    margin: 0;
+
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+
+    color: #3f4652;
+}
+
+/* Session name */
+
+h2 {
+    margin: 0;
+
+    font-size: 1rem;
+    font-weight: 500;
+
+    color: #737b88;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+}
+
+/* Timer */
+
+main > div:first-of-type {
+    width: 230px;
+    height: 230px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #e0e5ec;
+
+    box-shadow:
+        inset 10px 10px 20px #bec3c9,
+        inset -10px -10px 20px #ffffff;
+}
+
+main > div:first-of-type span {
+    font-size: 3.5rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+
+    color: #3f4652;
+}
+
+/* Controls */
+
+main > div:nth-of-type(2) {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Buttons */
+
+button {
+    border: none;
+    outline: none;
+
+    padding: 0.8rem 1.4rem;
+
+    border-radius: 14px;
+
+    background: #e0e5ec;
+    color: #4c5563;
+
+    font-size: 0.95rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        6px 6px 12px #bec3c9,
+        -6px -6px 12px #ffffff;
+
+    transition:
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(1px);
+
+    box-shadow:
+        inset 4px 4px 8px #bec3c9,
+        inset -4px -4px 8px #ffffff;
+}
+
+/* Completed sessions */
+
+p {
+    margin: 0;
+
+    font-size: 0.9rem;
+    color: #7a828e;
+}
