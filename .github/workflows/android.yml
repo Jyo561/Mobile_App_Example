@@ -52,9 +52,7 @@ steps:
 # ------------------------------------------
 - name: Install Capacitor
   run: |
-  npm install @capacitor/core
-  npm install @capacitor/cli
-  npm install @capacitor/android
+  npm install @capacitor/core @capacitor/cli @capacitor/android
 # ------------------------------------------
 # Initialize Capacitor
 # ------------------------------------------
