@@ -1,0 +1,18 @@
+[package]
+name = "pomodoro-iced"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+iced = { version = "0.13", features = ["tokio"] }
+
+[package.metadata.android]
+package = "com.jyotiraditya.pomodoro"
+build_targets = ["aarch64-linux-android"]
+
+[package.metadata.android.sdk]
+target_sdk_version = 35
+min_sdk_version = 23
