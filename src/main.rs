@@ -7,9 +7,7 @@ use iced::{
 use std::time::Duration;
 
 fn main() -> iced::Result {
-    iced::application("Pomodoro", update, view)
-        .subscription(subscription)
-        .run()
+    pomodoro_iced::run()
 }
 
 #[derive(Debug, Clone)]
