@@ -23,8 +23,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: |
-            aarch64-linux-android
+          targets: aarch64-linux-android
 
       # ------------------------------------------
       # Setup Java
@@ -129,7 +128,7 @@ jobs:
       # ------------------------------------------
       - name: Build Android APK
         run: |
-          dx bundle --android --release
+          dx bundle --android 
 
       # ------------------------------------------
       # Find APK
