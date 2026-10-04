@@ -1,0 +1,12 @@
+[package]
+name = "pomodoro-dioxus"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dioxus = { version = "0.7", features = ["mobile"] }
+tokio = { version = "1", features = ["time"] }
+
+[features]
+default = ["mobile"]
+mobile = ["dioxus/mobile"]
