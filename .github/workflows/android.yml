@@ -7,20 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  android:
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # ------------------------------------------
+      # Checkout source code
+      # ------------------------------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Setup Rust
+      # ------------------------------------------
+      # Install Rust + Android targets
+      # ------------------------------------------
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: |
@@ -29,44 +29,84 @@ jobs:
             i686-linux-android
             x86_64-linux-android
 
+      # ------------------------------------------
+      # Setup Java
+      # ------------------------------------------
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # ------------------------------------------
+      # Setup Android SDK
+      # ------------------------------------------
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # ------------------------------------------
+      # Install Android SDK packages
+      # ------------------------------------------
       - name: Install Android SDK packages
         run: |
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-35"
-          sdkmanager "build-tools;35.0.0"
-          sdkmanager "cmake;3.22.1"
-          sdkmanager "ndk;25.2.9519653"
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
 
-      - name: Set Android environment
-        run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
+            -name sdkmanager \
+            -type f | head -n 1)
 
+          echo "Using sdkmanager: $SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses || true
+
+          "$SDKMANAGER" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "cmake;3.22.1" \
+            "ndk;25.2.9519653"
+
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
+
+      # ------------------------------------------
+      # Install Dioxus CLI
+      # ------------------------------------------
       - name: Install Dioxus CLI
         run: |
           curl -fsSL https://dioxus.dev/install.sh | bash
-          echo "$HOME/.dx/bin" >> $GITHUB_PATH
 
+          echo "$HOME/.dx/bin" >> "$GITHUB_PATH"
+
+      # ------------------------------------------
+      # Check Dioxus
+      # ------------------------------------------
       - name: Check Dioxus
         run: |
           dx --version
           dx doctor
 
-      - name: Build APK
+      # ------------------------------------------
+      # Build Android APK
+      # ------------------------------------------
+      - name: Build Android APK
         run: |
           dx bundle --android --release
 
+      # ------------------------------------------
+      # Find APK
+      # ------------------------------------------
       - name: Find APK
         run: |
-          find target -name "*.apk" -type f
+          find target -type f -name "*.apk"
 
+      # ------------------------------------------
+      # Upload APK
+      # ------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: pomodoro-android
+          name: pomodoro-android-apk
           path: |
             target/**/*.apk
