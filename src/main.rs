@@ -1,6 +1,130 @@
 use dioxus::prelude::*;
 use std::time::Duration;
 
+const STYLE: &str = r#"
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #e0e5ec;
+    color: #4a5568;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0e5ec;
+    padding: 20px;
+}
+
+.pomodoro {
+    width: 380px;
+    padding: 45px 35px;
+    border-radius: 35px;
+
+    background: #e0e5ec;
+
+    box-shadow:
+        15px 15px 30px #bec3c9,
+        -15px -15px 30px #ffffff;
+
+    text-align: center;
+}
+
+.title {
+    margin: 0 0 30px;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #3f4856;
+}
+
+.timer {
+    width: 230px;
+    height: 230px;
+
+    margin: 0 auto 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #e0e5ec;
+
+    box-shadow:
+        inset 10px 10px 20px #bec3c9,
+        inset -10px -10px 20px #ffffff;
+}
+
+.time {
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #3f4856;
+    font-variant-numeric: tabular-nums;
+}
+
+.status {
+    margin-bottom: 30px;
+    font-size: 14px;
+    color: #7b8491;
+    letter-spacing: 1px;
+}
+
+.controls {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+}
+
+.button {
+    border: none;
+    outline: none;
+
+    padding: 15px 30px;
+
+    border-radius: 15px;
+
+    background: #e0e5ec;
+
+    color: #4a5568;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        7px 7px 14px #bec3c9,
+        -7px -7px 14px #ffffff;
+
+    transition: all 0.15s ease;
+}
+
+.button:hover {
+    color: #2f6fed;
+}
+
+.button:active {
+    box-shadow:
+        inset 5px 5px 10px #bec3c9,
+        inset -5px -5px 10px #ffffff;
+
+    transform: translateY(1px);
+}
+
+.reset {
+    padding: 15px 20px;
+}
+"#;
+
 fn main() {
     dioxus::launch(App);
 }
@@ -30,131 +154,7 @@ fn App() -> Element {
     let secs = seconds() % 60;
 
     rsx! {
-        style {
-            r#"
-            * {
-                box-sizing: border-box;
-            }
-
-            body {
-                margin: 0;
-                font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                background: #e0e5ec;
-                color: #4a5568;
-            }
-
-            .app {
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #e0e5ec;
-                padding: 20px;
-            }
-
-            .pomodoro {
-                width: 380px;
-                padding: 45px 35px;
-                border-radius: 35px;
-
-                background: #e0e5ec;
-
-                box-shadow:
-                    15px 15px 30px #bec3c9,
-                    -15px -15px 30px #ffffff;
-
-                text-align: center;
-            }
-
-            .title {
-                margin: 0 0 30px;
-                font-size: 28px;
-                font-weight: 700;
-                letter-spacing: 1px;
-                color: #3f4856;
-            }
-
-            .timer {
-                width: 230px;
-                height: 230px;
-
-                margin: 0 auto 35px;
-
-                display: flex;
-                align-items: center;
-                justify-content: center;
-
-                border-radius: 50%;
-
-                background: #e0e5ec;
-
-                box-shadow:
-                    inset 10px 10px 20px #bec3c9,
-                    inset -10px -10px 20px #ffffff;
-            }
-
-            .time {
-                font-size: 48px;
-                font-weight: 600;
-                letter-spacing: 2px;
-                color: #3f4856;
-                font-variant-numeric: tabular-nums;
-            }
-
-            .status {
-                margin-bottom: 30px;
-                font-size: 14px;
-                color: #7b8491;
-                letter-spacing: 1px;
-            }
-
-            .controls {
-                display: flex;
-                gap: 18px;
-                justify-content: center;
-            }
-
-            .button {
-                border: none;
-                outline: none;
-
-                padding: 15px 30px;
-
-                border-radius: 15px;
-
-                background: #e0e5ec;
-
-                color: #4a5568;
-
-                font-size: 15px;
-                font-weight: 600;
-
-                cursor: pointer;
-
-                box-shadow:
-                    7px 7px 14px #bec3c9,
-                    -7px -7px 14px #ffffff;
-
-                transition: all 0.15s ease;
-            }
-
-            .button:hover {
-                color: #2f6fed;
-            }
-
-            .button:active {
-                box-shadow:
-                    inset 5px 5px 10px #bec3c9,
-                    inset -5px -5px 10px #ffffff;
-
-                transform: translateY(1px);
-            }
-
-            .reset {
-                padding: 15px 20px;
-            }
-            "#
-        }
+        style { {STYLE} }
 
         div {
             class: "app",
@@ -178,6 +178,7 @@ fn App() -> Element {
 
                 div {
                     class: "status",
+
                     if running() {
                         "Focus mode"
                     } else if seconds() == 0 {
