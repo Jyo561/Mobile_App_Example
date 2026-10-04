@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
-      - dioxus
+      - master
   workflow_dispatch:
 
 jobs:
@@ -42,22 +42,31 @@ jobs:
       # Setup Android SDK
       # ------------------------------------------
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
+            -name sdkmanager \
+            -type f | head -n 1)
+
+          echo "Using sdkmanager:"
+          echo "$SDKMANAGER"
+
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/cmdline-tools/16.0/bin" >> "$GITHUB_PATH"
+
+          yes | "$SDKMANAGER" --licenses || true
 
       # ------------------------------------------
       # Install Android SDK packages
       # ------------------------------------------
       - name: Install Android SDK packages
         run: |
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-
-          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
-            -name sdkmanager \
-            -type f | head -n 1)
-
-          echo "Using sdkmanager: $SDKMANAGER"
-
-          yes | "$SDKMANAGER" --licenses || true
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"
 
           "$SDKMANAGER" \
             "platform-tools" \
@@ -66,8 +75,12 @@ jobs:
             "cmake;3.22.1" \
             "ndk;25.2.9519653"
 
-          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+      # ------------------------------------------
+      # Set Android NDK
+      # ------------------------------------------
+      - name: Configure Android NDK
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
           echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
 
       # ------------------------------------------
@@ -76,16 +89,19 @@ jobs:
       - name: Install Dioxus CLI
         run: |
           curl -fsSL https://dioxus.dev/install.sh | bash
-
           echo "$HOME/.dx/bin" >> "$GITHUB_PATH"
 
       # ------------------------------------------
-      # Check Dioxus
+      # Verify environment
       # ------------------------------------------
-      - name: Check Dioxus
+      - name: Check environment
         run: |
+          rustc --version
+          cargo --version
           dx --version
-          dx doctor
+          adb version
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
 
       # ------------------------------------------
       # Build Android APK
@@ -99,7 +115,7 @@ jobs:
       # ------------------------------------------
       - name: Find APK
         run: |
-          find target -type f -name "*.apk"
+          find target -type f -name "*.apk" -print
 
       # ------------------------------------------
       # Upload APK
