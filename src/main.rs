@@ -4,6 +4,7 @@ use std::time::Duration;
 const STYLE: &str = r#"
 * {
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
