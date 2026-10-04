@@ -1,148 +1,209 @@
-name: Build Android APK
+name: Dioxus Android
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - dioxus
-  workflow_dispatch:
 
 jobs:
-  build-android:
-    runs-on: ubuntu-latest
+  android:
+    runs-on: ubuntu-24.04
+
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      NDK_VERSION: 27.2.12479018
 
     steps:
-      # ------------------------------------------
-      # Checkout source code
-      # ------------------------------------------
-      - name: Checkout repository
+
+      # --------------------------------------------------
+      # Checkout
+      # --------------------------------------------------
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ------------------------------------------
-      # Install Rust + Android targets
-      # ------------------------------------------
+
+      # --------------------------------------------------
+      # Rust
+      # --------------------------------------------------
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
 
-      # ------------------------------------------
-      # Setup Java
-      # ------------------------------------------
+
+      # --------------------------------------------------
+      # Java
+      # --------------------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
-
-      # ------------------------------------------
-      # Setup Android SDK
-      # ------------------------------------------
-      - name: Setup Android SDK
-        run: |
-          export ANDROID_HOME=/usr/local/lib/android/sdk
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-
-          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
-            -type f \
-            -name sdkmanager \
-            -print -quit)
-
-          if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager not found!"
-            find "$ANDROID_HOME/cmdline-tools" -maxdepth 3 -type f || true
-            exit 1
-          fi
-
-          echo "Using sdkmanager: $SDKMANAGER"
-
-          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-
-          yes | "$SDKMANAGER" --licenses || true
+          java-version: "21"
 
 
-      - name: Verify Android SDK
+      # --------------------------------------------------
+      # Android SDK
+      # --------------------------------------------------
+      - name: Locate Android SDK
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
 
-          which sdkmanager || true
-
-          find "$ANDROID_HOME" \
-            -maxdepth 4 \
+          find "$ANDROID_HOME/cmdline-tools" \
             -type f \
             -name sdkmanager \
             -print
 
-          sdkmanager --list | head -50
-      # ------------------------------------------
-      # Install Android SDK packages
-      # ------------------------------------------
       - name: Install Android SDK packages
         run: |
+          set -eux
+
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
             -type f \
             -name sdkmanager \
             -print -quit)
 
-          echo "Using sdkmanager: $SDKMANAGER"
+          echo "Using sdkmanager:"
+          echo "$SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses || true
 
           "$SDKMANAGER" \
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.0" \
-            "cmake;3.22.1" \
-            "ndk;25.2.9519653"
+            "ndk;${NDK_VERSION}"
 
-      # ------------------------------------------
-      # Set Android NDK
-      # ------------------------------------------
-      - name: Configure Android NDK
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+
+      # --------------------------------------------------
+      # Verify Android environment
+      # --------------------------------------------------
+      - name: Verify Android
         run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
+          echo "Java:"
+          java -version
 
-      # ------------------------------------------
+          echo
+          echo "Rust:"
+          rustc --version
+
+          echo
+          echo "Rust Android targets:"
+          rustup target list --installed | grep android
+
+          echo
+          echo "Android SDK:"
+          ls "$ANDROID_HOME"
+
+          echo
+          echo "NDK:"
+          ls "$ANDROID_HOME/ndk"
+
+
+      # --------------------------------------------------
       # Install Dioxus CLI
-      # ------------------------------------------
+      # --------------------------------------------------
       - name: Install Dioxus CLI
         run: |
-          curl -fsSL https://dioxus.dev/install.sh | bash
-          echo "$HOME/.dx/bin" >> "$GITHUB_PATH"
+          cargo install dioxus-cli --locked
 
-      # ------------------------------------------
-      # Verify environment
-      # ------------------------------------------
-      - name: Check environment
-        run: |
-          rustc --version
-          cargo --version
           dx --version
-          adb version
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
 
-      # ------------------------------------------
-      # Build Android APK
-      # ------------------------------------------
-      - name: Build Android APK
+
+      # --------------------------------------------------
+      # IMPORTANT:
+      # Force ARM64 Android target
+      # --------------------------------------------------
+      - name: Build Dioxus Android ARM64
         run: |
-          dx bundle --android 
+          set -eux
 
-      # ------------------------------------------
-      # Find APK
-      # ------------------------------------------
-      - name: Find APK
+          echo "Building for:"
+          echo "aarch64-linux-android"
+
+          dx build \
+            --android \
+            --release \
+            --target aarch64-linux-android
+
+
+      # --------------------------------------------------
+      # Show everything Dioxus generated
+      # --------------------------------------------------
+      - name: Inspect Dioxus output
         run: |
-          find target -type f -name "*.apk" -print
+          echo "========== APK =========="
+          find target/dx \
+            -type f \
+            -name "*.apk" \
+            -print
 
-      # ------------------------------------------
-      # Upload APK
-      # ------------------------------------------
-      - name: Upload APK
+          echo
+          echo "========== AAB =========="
+          find target/dx \
+            -type f \
+            -name "*.aab" \
+            -print
+
+          echo
+          echo "========== Android libs =========="
+          find target/dx \
+            -type f \
+            \( -name "*.so" -o -name "*.aab" -o -name "*.apk" \) \
+            -print
+
+
+      # --------------------------------------------------
+      # Verify APK architecture
+      # --------------------------------------------------
+      - name: Verify APK architecture
+        run: |
+          set -eux
+
+          APK=$(find target/dx \
+            -type f \
+            -name "*.apk" \
+            | head -n 1)
+
+          if [ -z "$APK" ]; then
+            echo "ERROR: No APK generated"
+            exit 1
+          fi
+
+          echo "APK:"
+          echo "$APK"
+
+          echo
+          echo "APK contents:"
+          unzip -l "$APK" | grep "lib/" || true
+
+          echo
+          echo "Native libraries:"
+          unzip -l "$APK" \
+            | grep -E "lib/(arm64-v8a|armeabi-v7a|x86|x86_64)/" \
+            || true
+
+          echo
+          echo "APK badging:"
+
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+
+          "$AAPT" dump badging "$APK" \
+            | grep -E \
+            "package:|sdkVersion:|targetSdkVersion:|native-code:"
+
+
+      # --------------------------------------------------
+      # Upload ONLY the actual APK
+      # --------------------------------------------------
+      - name: Upload ARM64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: pomodoro-android-apk
+          name: pomodoro-dioxus-arm64-apk
           path: |
-            target/**/*.apk
+            target/dx/**/outputs/apk/**/*.apk
+          if-no-files-found: error
