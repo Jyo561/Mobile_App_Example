@@ -4,10 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["cdylib"]
+name = "pomodoro_iced"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-iced = { version = "0.13", features = ["tokio"] }
+iced = { version = "0.14", features = ["tokio"] }
+
+android-activity = { version = "0.6", features = ["native-activity"] }
 
 [package.metadata.android]
 package = "com.jyotiraditya.pomodoro"
