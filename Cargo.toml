@@ -8,9 +8,8 @@ name = "pomodoro_iced"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-iced = { version = "0.14", features = ["tokio"] }
+iced = { version = "0.14", default-features = false, features = ["tokio", "wgpu"] }
 
-android-activity = { version = "0.6", features = ["native-activity"] }
 
 [package.metadata.android]
 package = "com.jyotiraditya.pomodoro"
